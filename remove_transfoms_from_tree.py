@@ -80,7 +80,29 @@ class TransformFilter:
                 ):
                     writer.write(topic, serialize_message(msg), t)
             else:
-                writer.write(topic, serialize_message(msg), t)
+                if topic == "/velocity_control/odom":
+                    # make up a transform from this message
+                    mumsg = get_message("tf2_msgs/msg/TFMessage")()
+                    mumsg.transforms.append(
+                        get_message("geometry_msgs/msg/TransformStamped")()
+                    )
+                    mumsg.transforms[0].header.stamp.sec = msg.header.stamp.sec
+                    mumsg.transforms[0].header.stamp.nanosec = msg.header.stamp.nanosec
+                    mumsg.transforms[0].header.frame_id = msg.header.frame_id
+                    mumsg.transforms[0].child_frame_id = msg.child_frame_id
+                    mumsg.transforms[0].transform.translation.x = msg.pose.pose.position.x
+                    mumsg.transforms[0].transform.translation.y = msg.pose.pose.position.y
+                    mumsg.transforms[0].transform.translation.z = msg.pose.pose.position.z
+                    mumsg.transforms[0].transform.rotation.x = msg.pose.pose.orientation.x
+                    mumsg.transforms[0].transform.rotation.y = msg.pose.pose.orientation.y
+                    mumsg.transforms[0].transform.rotation.z = msg.pose.pose.orientation.z
+                    mumsg.transforms[0].transform.rotation.w = msg.pose.pose.orientation.w
+
+                    writer.write(topic, serialize_message(msg), t)
+                    writer.write("/tf", serialize_message(mumsg), t)
+
+                else:
+                    writer.write(topic, serialize_message(msg), t)
 
 
 if __name__ == "__main__":
