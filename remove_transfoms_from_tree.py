@@ -81,6 +81,10 @@ class TransformFilter:
                     writer.write(topic, serialize_message(msg), t)
             else:
                 if topic == "/velocity_control/odom":
+                    # rewrite the frames because they are not the correct ones
+                    msg.header.frame_id = "odom"
+                    msg.child_frame_id = "base_link"
+
                     # make up a transform from this message
                     mumsg = get_message("tf2_msgs/msg/TFMessage")()
                     mumsg.transforms.append(
